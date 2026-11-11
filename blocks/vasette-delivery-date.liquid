@@ -1,0 +1,17 @@
+{%- comment -%}
+  Flowers Vasette: delivery / collection date picker as a theme block, for block-based themes like Horizon.
+  In the theme editor: Cart page → the Cart section → Add block → "Delivery date", then drag it next to the
+  checkout button (e.g. just above Summary). Only shown when the cart has something in it. See README.md.
+{%- endcomment -%}
+{%- render 'vasette-delivery-date', section_id: section.id, required: block.settings.require, heading: block.settings.heading, class: '', attributes: block.shopify_attributes -%}
+
+{% schema %}
+{
+  "name": "Delivery date",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Delivery or collection" },
+    { "type": "checkbox", "id": "require", "label": "A date is needed before checkout", "default": true }
+  ],
+  "presets": [{ "name": "Delivery date" }]
+}
+{% endschema %}

@@ -1,0 +1,58 @@
+{%- comment -%}
+  Flowers Vasette: the cart's delivery / collection date picker (markup shared by the section and the block).
+    section_id  the section that renders it (used to re-read the cart after it changes)
+    required    true: checkout waits for a date
+    heading     optional heading
+    class       extra classes (the section adds page-width)
+    attributes  the theme editor's block attributes, if any
+  Reads the delivery calendar the phone orders app publishes (shop.metafields.vasette.delivery_calendar) and each
+  cart product's Delivery off periods / off weekdays / notice. Only shown when the cart has something in it; the
+  hidden placeholder lets the picker appear and disappear as items are added or removed. See README.md.
+{%- endcomment -%}
+{%- if cart.item_count == 0 -%}
+  <div data-vdd-section data-vdd-empty data-section-id="{{ section_id }}" data-required="{{ required }}" hidden {{ attributes }}></div>
+{%- else -%}
+<div
+  class="vdd {{ class }}"
+  data-vdd-section
+  data-section-id="{{ section_id }}"
+  data-required="{{ required }}"
+  {{ attributes }}
+>
+  {%- if heading != blank -%}
+    <h2 class="vdd-heading">{{ heading | escape }}</h2>
+  {%- endif -%}
+  <script type="application/json" data-vdd-data>
+    {
+      "calendar": {%- if shop.metafields.vasette.delivery_calendar.value != blank -%}{{ shop.metafields.vasette.delivery_calendar.value | json }}{%- else -%}null{%- endif -%},
+      "attributes": {{ cart.attributes | json }},
+      "products": [
+        {%- for item in cart.items -%}
+          {%- assign product = item.product -%}
+          {
+            "productId": {{ item.product_id | append: '' | json }},
+            "title": {{ product.title | json }},
+            "offPeriods": [
+              {%- for period in product.metafields.custom.delivery_off_periods.value -%}
+                {
+                  "name": {{ period.name.value | json }},
+                  "from": {%- if period.start.value != blank -%}{{ period.start.value | date: '%Y-%m-%d' | json }}{%- else -%}""{%- endif -%},
+                  "to": {%- if period.end.value != blank -%}{{ period.end.value | date: '%Y-%m-%d' | json }}{%- else -%}""{%- endif -%}
+                }{%- unless forloop.last -%},{%- endunless -%}
+              {%- endfor -%}
+            ],
+            "offWeekdays": {%- if product.metafields.custom.delivery_off_weekdays.value != blank -%}{{ product.metafields.custom.delivery_off_weekdays.value | json }}{%- else -%}[]{%- endif -%},
+            "noticeDays": {{ product.metafields.custom.delivery_notice_days.value | default: 0 | json }}
+          }{%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      ]
+    }
+  </script>
+  <div data-vdd-root aria-live="polite">
+    <noscript>Please turn on JavaScript to choose a delivery date.</noscript>
+  </div>
+</div>
+{%- endif -%}
+
+{{ 'vasette-delivery-date.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'vasette-delivery-date.js' | asset_url }}" defer="defer"></script>
